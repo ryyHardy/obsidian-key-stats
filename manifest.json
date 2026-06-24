@@ -1,0 +1,11 @@
+{
+	"id": "key-stats",
+	"name": "Key Stats",
+	"version": "1.0.0",
+	"minAppVersion": "1.0.0",
+	"description": "A more productive way to build good typing habits. Compiles advanced typing stats as you take notes.",
+	"author": "Ryan Hardy",
+	"authorUrl": "https://github.com/ryyHardy",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}
