@@ -6,12 +6,13 @@ import {
 } from './settings';
 
 import { EditorView } from '@codemirror/view';
-import { ChangeEvent, getBursts, burstWPM, weightedSessionWPM } from './stats';
+import { EditEvent } from './types';
+import { getBursts, burstWPM, weightedSessionWPM } from './stats';
 
 export default class KeyStats extends Plugin {
 	settings!: KeyStatsSettings;
 	statusBarItemEl!: HTMLElement;
-	events: ChangeEvent[] = [];
+	events: EditEvent[] = [];
 	statusUpdateTimer: number | null = null;
 
 	async onload() {
@@ -29,28 +30,44 @@ export default class KeyStats extends Plugin {
 			EditorView.updateListener.of((update) => {
 				if (!update.docChanged) return;
 
-				let added = 0,
-					deleted = 0;
+				const now = Date.now();
+				const fileKey = this.app.workspace.getActiveFile()?.path ?? '';
 
 				for (const tr of update.transactions) {
 					if (!tr.docChanged) continue;
 
+					const selectionBefore = {
+						anchor: tr.startState.selection.main.anchor,
+						head: tr.startState.selection.main.head,
+					};
+					const selectionAfter = {
+						anchor: tr.newSelection.main.anchor,
+						head: tr.newSelection.main.head,
+					};
+
 					tr.changes.iterChanges(
 						(fromA, toA, fromB, toB, inserted) => {
-							const deletedStr = tr.startState.doc.sliceString(
+							const deletedText = tr.startState.doc.sliceString(
 								fromA,
 								toA,
 							);
-							const addedStr = inserted.toString();
+							const insertedText = inserted.toString();
 
-							added += addedStr.length;
-							deleted += deletedStr.length;
+							this.events.push({
+								timestamp: now,
+								fileKey,
+								deletedFrom: fromA,
+								deletedTo: toA,
+								deletedText,
+								insertedFrom: fromB,
+								insertedTo: toB,
+								insertedText,
+								selectionBefore,
+								selectionAfter,
+							});
 						},
 					);
 				}
-
-				this.events.push({ timestamp: Date.now(), added, deleted });
-
 				if (this.statusUpdateTimer !== null)
 					window.clearTimeout(this.statusUpdateTimer);
 				this.statusUpdateTimer = window.setTimeout(

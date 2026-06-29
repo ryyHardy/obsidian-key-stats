@@ -1,33 +1,40 @@
-export interface ChangeEvent {
-	timestamp: number; // Date.now()
-	added: number; // characters added
-	deleted: number; // characters deleted
-	// TODO: Add cursor position maybe
-}
+import { EditEvent } from './types';
 
+/**
+ * Divides an array of edit events into "bursts" based on their timing
+ * @param changes The array of edits to divide
+ * @param gapThreshold Smallest time gap (ms) needed to put the next edit into a new burst
+ * @returns Array of bursts
+ */
 export function getBursts(
-	changes: ChangeEvent[],
+	edits: EditEvent[],
 	gapThreshold = 2000,
-): ChangeEvent[][] {
-	const bursts: ChangeEvent[][] = [];
-	let current: ChangeEvent[] = [];
+): EditEvent[][] {
+	const bursts: EditEvent[][] = [];
+	let current: EditEvent[] = [];
 
-	for (const event of changes) {
+	for (const edit of edits) {
 		if (
 			current.length > 0 &&
-			event.timestamp - current[current.length - 1]!.timestamp >
+			edit.timestamp - current[current.length - 1]!.timestamp >
 				gapThreshold
 		) {
 			bursts.push(current);
 			current = [];
 		}
-		current.push(event);
+		current.push(edit);
 	}
 	if (current.length > 0) bursts.push(current);
 	return bursts;
 }
 
-export function burstWPM(burst: ChangeEvent[], minWindowMs = 3000): number {
+/**
+ * Calculates the WPM of a burst
+ * @param burst Burst as a list of edits
+ * @param minWindowMs The burst duration to use if the burst lasts shorter than this (accounts for very shorts bursts and makes WPM more sensible early in a burst)
+ * @returns The WPM calculated by dividing net characters by 5 and again by the duration in minutes
+ */
+export function burstWPM(burst: EditEvent[], minWindowMs = 3000): number {
 	if (burst.length === 0) return 0;
 
 	const first = burst[0]!;
@@ -36,11 +43,19 @@ export function burstWPM(burst: ChangeEvent[], minWindowMs = 3000): number {
 	const elapsed = last.timestamp - first.timestamp;
 
 	const durationMinutes = Math.max(elapsed, minWindowMs) / 60000;
-	const netChars = burst.reduce((sum, e) => sum + e.added - e.deleted, 0);
+	const netChars = burst.reduce(
+		(sum, e) => sum + e.insertedText.length - e.deletedText.length,
+		0,
+	);
 	return Math.max(0, netChars) / 5 / durationMinutes;
 }
 
-export function weightedSessionWPM(bursts: ChangeEvent[][]): number {
+/**
+ * Calculates your overall WPM across the session
+ * @param bursts Array of bursts
+ * @returns Average WPM across all the bursts, disregarding very short ones
+ */
+export function weightedSessionWPM(bursts: EditEvent[][]): number {
 	let totalWeightedWPM = 0;
 	let totalDuration = 0;
 
