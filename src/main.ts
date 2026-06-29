@@ -6,10 +6,13 @@ import {
 } from './settings';
 
 import { EditorView } from '@codemirror/view';
+import { ChangeEvent, getBursts, burstWPM, weightedSessionWPM } from './stats';
 
 export default class KeyStats extends Plugin {
-	private statusBarItemEl!: HTMLElement;
 	settings!: KeyStatsSettings;
+	statusBarItemEl!: HTMLElement;
+	events: ChangeEvent[] = [];
+	statusUpdateTimer: number | null = null;
 
 	async onload() {
 		await this.loadSettings();
@@ -26,8 +29,8 @@ export default class KeyStats extends Plugin {
 			EditorView.updateListener.of((update) => {
 				if (!update.docChanged) return;
 
-				let totalAdded = 0;
-				let totalDeleted = 0;
+				let added = 0,
+					deleted = 0;
 
 				for (const tr of update.transactions) {
 					if (!tr.docChanged) continue;
@@ -40,24 +43,49 @@ export default class KeyStats extends Plugin {
 							);
 							const addedStr = inserted.toString();
 
-							totalAdded += addedStr.length;
-							totalDeleted += deletedStr.length;
+							added += addedStr.length;
+							deleted += deletedStr.length;
 						},
 					);
 				}
 
-				if (totalAdded > 0 || totalDeleted > 0) {
-					window.requestAnimationFrame(() => {
-						this.statusBarItemEl.setText(
-							`+${totalAdded} chrs | -${totalDeleted} chrs`,
-						);
-					});
-				}
+				this.events.push({ timestamp: Date.now(), added, deleted });
+
+				if (this.statusUpdateTimer !== null)
+					window.clearTimeout(this.statusUpdateTimer);
+				this.statusUpdateTimer = window.setTimeout(
+					() => this.updateStatusBar(),
+					500,
+				);
 			}),
 		);
 	}
 
 	onunload() {}
+
+	updateStatusBar() {
+		const now = Date.now();
+		const GAP_THRESHOLD = 2000;
+
+		const bursts = getBursts(this.events, GAP_THRESHOLD);
+		if (bursts.length === 0) return;
+
+		const lastBurst = bursts[bursts.length - 1]!;
+		const lastEventAge = now - lastBurst[lastBurst.length - 1]!.timestamp;
+		const isActive = lastEventAge < GAP_THRESHOLD;
+
+		// If the last burst is still active, it's the "live" burst
+		// If not, the user is paused — show the last completed burst's speed
+		const currentWPM = burstWPM(lastBurst);
+
+		// Session WPM: duration-weighted average across all bursts
+		const sessionWPM = weightedSessionWPM(bursts);
+
+		const indicator = isActive ? '⌨' : '·';
+		this.statusBarItemEl.setText(
+			`${indicator} ${Math.round(currentWPM)} WPM  |  session: ${Math.round(sessionWPM)} WPM`,
+		);
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign(
