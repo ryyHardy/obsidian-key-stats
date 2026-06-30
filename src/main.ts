@@ -9,6 +9,8 @@ import { EditorView } from '@codemirror/view';
 import { EditEvent } from './types';
 import { getBursts, burstWPM, weightedSessionWPM } from './stats';
 
+// TODO: Add a mechanism that clears the events array occassionally, because that thing is just growing and growing
+
 export default class KeyStats extends Plugin {
 	settings!: KeyStatsSettings;
 	statusBarItemEl!: HTMLElement;
@@ -92,7 +94,7 @@ export default class KeyStats extends Plugin {
 		const isActive = lastEventAge < GAP_THRESHOLD;
 
 		// If the last burst is still active, it's the "live" burst
-		// If not, the user is paused — show the last completed burst's speed
+		// If not, the user is paused - show the last completed burst's speed
 		const currentWPM = burstWPM(lastBurst);
 
 		// Session WPM: duration-weighted average across all bursts

@@ -1,4 +1,4 @@
-import { EditEvent } from './types';
+import { EditEvent, DailyStats } from './types';
 
 /**
  * Divides an array of edit events into "bursts" based on their timing
@@ -69,4 +69,8 @@ export function weightedSessionWPM(bursts: EditEvent[][]): number {
 	}
 
 	return totalDuration === 0 ? 0 : totalWeightedWPM / totalDuration;
+}
+
+export function isBackwardJump(prev: EditEvent, curr: EditEvent): boolean {
+	return curr.deletedFrom < prev.insertedTo;
 }
