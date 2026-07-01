@@ -1,5 +1,5 @@
 {
-	"name": "obsidian-key-stats",
+	"name": "obsidian-typing-stats",
 	"version": "1.0.0",
 	"description": "A more productive way to build good typing habits. Compiles advanced typing stats as you take notes.",
 	"main": "main.js",

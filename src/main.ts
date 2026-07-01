@@ -1,20 +1,20 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import {
-	KeyStatsSettings,
+	TypingStatsSettings,
 	DEFAULT_SETTINGS,
-	KeyStatsSettingTab,
+	TypingStatsSettingTab,
 } from './settings';
 
 import { EditorView } from '@codemirror/view';
 import { EditEvent } from './types';
 import { getBursts, burstWPM, weightedSessionWPM } from './stats';
 
-import { KeyStatsView, VIEW_TYPE_KEY_STATS } from './view';
+import { TypingStatsView, VIEW_TYPE_KEY_STATS } from './view';
 
 // TODO: Add a mechanism that clears the events array occassionally, because that thing is just growing and growing
 
 export default class KeyStats extends Plugin {
-	settings!: KeyStatsSettings;
+	settings!: TypingStatsSettings;
 	statusBarItemEl!: HTMLElement;
 	events: EditEvent[] = [];
 	statusUpdateTimer: number | null = null;
@@ -24,11 +24,11 @@ export default class KeyStats extends Plugin {
 
 		// Set up commands here if needed
 
-		this.addSettingTab(new KeyStatsSettingTab(this.app, this));
+		this.addSettingTab(new TypingStatsSettingTab(this.app, this));
 
 		this.registerView(
 			VIEW_TYPE_KEY_STATS,
-			(leaf) => new KeyStatsView(leaf),
+			(leaf) => new TypingStatsView(leaf),
 		);
 
 		this.addRibbonIcon('keyboard', 'Typing stats', async () => {
@@ -98,15 +98,15 @@ export default class KeyStats extends Plugin {
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_KEY_STATS);
 
 		if (leaves.length > 0) {
-			leaf = leaves[0]!;
+			leaf = leaves[0] ?? null;
 		} else {
-			leaf = workspace.getRightLeaf(false);
-			await leaf!.setViewState({
+			leaf = workspace.getRightLeaf(false)!;
+			await leaf.setViewState({
 				type: VIEW_TYPE_KEY_STATS,
 				active: true,
 			});
 
-			await workspace.revealLeaf(leaf!);
+			await workspace.revealLeaf(leaf);
 		}
 	}
 
@@ -140,7 +140,7 @@ export default class KeyStats extends Plugin {
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			(await this.loadData()) as Partial<KeyStatsSettings>,
+			(await this.loadData()) as Partial<TypingStatsSettings>,
 		);
 	}
 

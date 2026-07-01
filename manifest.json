@@ -1,6 +1,6 @@
 {
-	"id": "key-stats",
-	"name": "Key Stats",
+	"id": "typing-stats",
+	"name": "Typing Stats",
 	"version": "1.0.0",
 	"minAppVersion": "1.7.2",
 	"description": "A more productive way to build good typing habits. Compiles advanced typing stats as you take notes.",

@@ -1,8 +1,8 @@
 import { IconName, ItemView, WorkspaceLeaf } from 'obsidian';
 
-export const VIEW_TYPE_KEY_STATS = 'key-stats-view';
+export const VIEW_TYPE_KEY_STATS = 'typing-stats-view';
 
-export class KeyStatsView extends ItemView {
+export class TypingStatsView extends ItemView {
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
 	}

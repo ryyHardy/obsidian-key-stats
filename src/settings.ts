@@ -1,18 +1,18 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
-import KeyStats from './main';
+import TypingStats from './main';
 
-export interface KeyStatsSettings {
+export interface TypingStatsSettings {
 	enabled: boolean;
 }
 
-export const DEFAULT_SETTINGS: KeyStatsSettings = {
+export const DEFAULT_SETTINGS: TypingStatsSettings = {
 	enabled: true,
 };
 
-export class KeyStatsSettingTab extends PluginSettingTab {
-	plugin: KeyStats;
+export class TypingStatsSettingTab extends PluginSettingTab {
+	plugin: TypingStats;
 
-	constructor(app: App, plugin: KeyStats) {
+	constructor(app: App, plugin: TypingStats) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
